@@ -12,29 +12,29 @@ import java.util.List;
 public class TestTree {
     @Test
     public void testTree() {
-        TreeNode<String, TreeNode.Value> root = new TreeNode<>(null, null);
+        TreeNode<String, TreeNode.Value> root = new TreeNode<String, TreeNode.Value>(null, null);
         for (int lA = 0; lA < 3; lA++) {
             String idlA = "LA" + lA;
-            TreeNode<String, TreeNode.Value> lANode = new TreeNode<>(idlA, root);
+            TreeNode<String, TreeNode.Value> lANode = new TreeNode<String, TreeNode.Value>(idlA, root);
             root.childNodes.put(idlA, lANode);
 
             for (int lB = 0; lB < 3; lB++) {
                 String idlB = "LB" + lB;
-                TreeNode<String, TreeNode.Value> lBNode = new TreeNode<>(idlB, lANode);
+                TreeNode<String, TreeNode.Value> lBNode = new TreeNode<String, TreeNode.Value>(idlB, lANode);
                 lANode.childNodes.put(idlB, lBNode);
 
                 for (int lC = 0; lC < 3; lC++) {
                     String idlC = "LC" + lC;
-                    TreeNode<String, TreeNode.Value> lCNode = new TreeNode<>(idlC, lBNode);
+                    TreeNode<String, TreeNode.Value> lCNode = new TreeNode<String, TreeNode.Value>(idlC, lBNode);
                     lBNode.childNodes.put(idlC, lCNode);
                 }
             }
         }
 
-        List<Predicate<TreeNode<String, TreeNode.Value>>> levelPredicates = new ArrayList<>();
+        List<Predicate<TreeNode<String, TreeNode.Value>>> levelPredicates = new ArrayList<Predicate<TreeNode<String, TreeNode.Value>>>();
 //*/
         // case1 (LA1, LA2) (LC1, LC2)
-        List<Predicate<TreeNode<String, TreeNode.Value>>> laList = new ArrayList<>();
+        List<Predicate<TreeNode<String, TreeNode.Value>>> laList = new ArrayList<Predicate<TreeNode<String, TreeNode.Value>>>();
         laList.add(TreeNodeUtil.<String, TreeNode.Value>idPredicate("LA1"));
         laList.add(TreeNodeUtil.<String, TreeNode.Value>idPredicate("LA2"));
 
@@ -42,7 +42,7 @@ public class TestTree {
 
         levelPredicates.add(TruePredicate.<TreeNode<String, TreeNode.Value>>truePredicate());
 
-        List<Predicate<TreeNode<String, TreeNode.Value>>> lcList = new ArrayList<>();
+        List<Predicate<TreeNode<String, TreeNode.Value>>> lcList = new ArrayList<Predicate<TreeNode<String, TreeNode.Value>>>();
         lcList.add(TreeNodeUtil.<String, TreeNode.Value>idPredicate("LC1"));
         lcList.add(TreeNodeUtil.<String, TreeNode.Value>idPredicate("LC2"));
 

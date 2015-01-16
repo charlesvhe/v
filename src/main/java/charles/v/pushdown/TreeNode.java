@@ -8,7 +8,7 @@ import java.util.Map;
 public class TreeNode<K, V extends TreeNode.Value> implements Cloneable {
     public K id;
     public TreeNode<K, V> parent;
-    public HashMap<K, TreeNode<K, V>> childNodes = new HashMap<>();
+    public HashMap<K, TreeNode<K, V>> childNodes = new HashMap<K, TreeNode<K, V>>();
     public V value;
 
     public TreeNode(K id, TreeNode<K, V> parent) {
@@ -17,7 +17,7 @@ public class TreeNode<K, V extends TreeNode.Value> implements Cloneable {
     }
 
     public List<K> getPath() {
-        LinkedList<K> path = new LinkedList<>();
+        LinkedList<K> path = new LinkedList<K>();
         TreeNode<K, V> curNode = this;
         while (curNode.parent != null) {
             path.addFirst(curNode.id);
@@ -29,7 +29,7 @@ public class TreeNode<K, V extends TreeNode.Value> implements Cloneable {
     public TreeNode<K, V> getChild(K id, boolean create) {
         TreeNode<K, V> child = this.childNodes.get(id);
         if (child == null && create) {
-            child = new TreeNode<>(id, this);
+            child = new TreeNode<K, V>(id, this);
             this.childNodes.put(id, child);
         }
         return child;
@@ -91,7 +91,7 @@ public class TreeNode<K, V extends TreeNode.Value> implements Cloneable {
 
     @Override
     public TreeNode<K, V> clone() {
-        TreeNode<K, V> clone = new TreeNode<>(this.id, this.parent);
+        TreeNode<K, V> clone = new TreeNode<K, V>(this.id, this.parent);
         if (this.childNodes != null && !this.childNodes.isEmpty()) {
             for (Map.Entry<K, TreeNode<K, V>> childEntry : this.childNodes.entrySet()) {
                 clone.childNodes.put(childEntry.getKey(), childEntry.getValue().clone());
