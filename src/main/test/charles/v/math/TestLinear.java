@@ -22,7 +22,7 @@ x2 + x0 <= 4
 x1 <= 3
 */
         LinearObjectiveFunction function = new LinearObjectiveFunction(new double[]{2, 2, 1}, 0);
-        Collection<LinearConstraint> constraints = new ArrayList<>();
+        Collection<LinearConstraint> constraints = new ArrayList<LinearConstraint>();
         constraints.add(new LinearConstraint(new double[]{1, 1, 0}, Relationship.LEQ, 5));
         constraints.add(new LinearConstraint(new double[]{1, 0, 1}, Relationship.LEQ, 4));
         constraints.add(new LinearConstraint(new double[]{0, 1, 0}, Relationship.LEQ, 3));

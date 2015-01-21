@@ -12,6 +12,23 @@ import java.util.List;
 public class TestTree {
     @Test
     public void testTree() {
+        TreeNode.Value value = new TreeNode.Value() {
+            @Override
+            public void aggregate(TreeNode.Value that, boolean clone) {
+
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return false;
+            }
+
+            @Override
+            public TreeNode.Value clone(){
+                return this;
+            }
+        };
+        
         TreeNode<String, TreeNode.Value> root = new TreeNode<String, TreeNode.Value>(null, null);
         for (int lA = 0; lA < 3; lA++) {
             String idlA = "LA" + lA;
@@ -26,6 +43,7 @@ public class TestTree {
                 for (int lC = 0; lC < 3; lC++) {
                     String idlC = "LC" + lC;
                     TreeNode<String, TreeNode.Value> lCNode = new TreeNode<String, TreeNode.Value>(idlC, lBNode);
+                    lCNode.value = value;
                     lBNode.childNodes.put(idlC, lCNode);
                 }
             }
@@ -44,7 +62,7 @@ public class TestTree {
 
         List<Predicate<TreeNode<String, TreeNode.Value>>> lcList = new ArrayList<Predicate<TreeNode<String, TreeNode.Value>>>();
         lcList.add(TreeNodeUtil.<String, TreeNode.Value>idPredicate("LC1"));
-        lcList.add(TreeNodeUtil.<String, TreeNode.Value>idPredicate("LC2"));
+//        lcList.add(TreeNodeUtil.<String, TreeNode.Value>idPredicate("LC2"));
 
         levelPredicates.add(PredicateUtils.anyPredicate(lcList));
 /*/

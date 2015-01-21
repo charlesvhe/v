@@ -103,6 +103,24 @@ public class TreeNode<K, V extends TreeNode.Value> implements Cloneable {
         return clone;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        TreeNode<K, V> curNode = this;
+        while (curNode.parent != null){
+            sb.append("|\t");
+            curNode = curNode.parent;
+        }
+        sb.append(this.id);
+        sb.append(" : ");
+        sb.append(this.value);
+        sb.append("\n");
+        for (Map.Entry<K,TreeNode<K,V>> childEntry : this.childNodes.entrySet()) {
+            sb.append(childEntry.getValue());
+        }
+        return sb.toString();
+    }
+
     public interface Value extends Cloneable {
         public void aggregate(Value that, boolean clone);
 

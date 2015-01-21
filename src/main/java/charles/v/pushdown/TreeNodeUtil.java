@@ -52,7 +52,7 @@ public class TreeNodeUtil {
 
 
     public static <K, V extends TreeNode.Value> ConvertContext<K, V> convertContext(List<String> srcLevel, List<String> destLevel) {
-        List<Integer> indexList = new ArrayList<>();
+        List<Integer> indexList = new ArrayList<Integer>();
         for (String level : destLevel) {
             int index = srcLevel.indexOf(level);
             if (index < 0) {
@@ -60,7 +60,7 @@ public class TreeNodeUtil {
             }
             indexList.add(index);
         }
-        return INSTANCE.new ConvertContext<>(indexList);
+        return INSTANCE.new ConvertContext<K, V>(indexList);
     }
 
     public interface LeafContext<K, V extends TreeNode.Value> {
@@ -68,7 +68,7 @@ public class TreeNodeUtil {
     }
 
     public class ConvertContext<K, V extends TreeNode.Value> implements LeafContext<K, V> {
-        public TreeNode<K, V> root = new TreeNode<>(null, null);
+        public TreeNode<K, V> root = new TreeNode<K, V>(null, null);
         public List<Integer> indexList;
 
         public ConvertContext(List<Integer> indexList) {
@@ -78,12 +78,18 @@ public class TreeNodeUtil {
         @Override
         public void processLeaf(TreeNode<K, V> leaf) {
             List<K> srcPath = leaf.getPath();
-            List<K> destPath = new ArrayList<>();
+            List<K> destPath = new ArrayList<K>();
             for (int index : indexList) {
                 destPath.add(srcPath.get(index));
             }
             System.out.println(srcPath + " -> " + destPath);
             // add to root with new destPath
+            TreeNode<K, V> child = root.getChild(destPath, true);
+            if(child.value == null){
+                child.value = leaf.value.clone();
+            }else{
+                child.value.aggregate(leaf.value, true);
+            }
         }
     }
 }

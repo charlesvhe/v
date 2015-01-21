@@ -11,7 +11,7 @@ import java.util.List;
 public class TestList {
     @Test
     public void testList(){
-        List<Integer> list = new ArrayList<>();
+        List<Integer> list = new ArrayList<Integer>();
         for (int i = 0; i < 10; i++) {
             list.add(i*2);
         }
