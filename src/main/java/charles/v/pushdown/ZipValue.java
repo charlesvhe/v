@@ -34,14 +34,15 @@ public class ZipValue {
             }else{
                 bitsMeta = META_8_BYTE;
             }
-            this.meta[i / 2] = setBitsMeta(this.meta[i / 2], bitsMeta, (i % 4));
+            this.meta[i / 4] = setBitsMeta(this.meta[i / 4], bitsMeta, (i % 4));
             dataLength += getByteSize(bitsMeta);
         }
         // initial data[]
         int off = 0;
         this.data = new byte[dataLength];
         for (int i = 0; i < data.length; i++) {
-            switch (this.meta[i]){
+            int bitsMeta = getBitsMeta(this.meta[i/4], (i % 4));
+            switch (bitsMeta){
                 case META_2_BYTE:
                     putShort(this.data, off, (short) data[i]);
                     break;
@@ -54,7 +55,7 @@ public class ZipValue {
                 default:
                     break;
             }
-            off += getByteSize(this.meta[i]);
+            off += getByteSize(bitsMeta);
         }
     }
 
@@ -131,11 +132,11 @@ public class ZipValue {
     public static int getBitsMeta(byte origByte, int off){
         switch (off){
             case 0:
-                return origByte & 192;
+                return (origByte & 192) >>> 6;
             case 1:
-                return origByte & 48;
+                return (origByte & 48) >>> 4;
             case 2:
-                return origByte & 12;
+                return (origByte & 12) >>> 2;
             default:
                 return origByte & 3;
         }
