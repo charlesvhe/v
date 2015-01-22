@@ -12,14 +12,19 @@ public class ZipValue {
      */
     private byte[] meta;
     private byte[] data;
+    private int length; // TODO will remove and make an abstract getLength()
+    public int getLength(){
+        return length;
+    }
 
     public ZipValue(long[] data) {
+        this.length = data.length;
         int dataLength = 0;
         // initial meta[]
-        this.meta = new byte[(data.length + 3) / 4];
+        this.meta = new byte[(this.getLength() + 3) / 4];
         for (int i = 0; i < data.length; i++) {
             double v = data[i];
-            int bitsMeta = 0;
+            int bitsMeta;
             if (0 == v) {
                 bitsMeta = META_0_BYTE;
             }else if(Short.MIN_VALUE <= v && v <= Short.MAX_VALUE){
@@ -30,7 +35,7 @@ public class ZipValue {
                 bitsMeta = META_8_BYTE;
             }
             this.meta[i / 2] = setBitsMeta(this.meta[i / 2], bitsMeta, (i % 4));
-            dataLength += getLength(bitsMeta);
+            dataLength += getByteSize(bitsMeta);
         }
         // initial data[]
         int off = 0;
@@ -49,11 +54,41 @@ public class ZipValue {
                 default:
                     break;
             }
-            off += getLength(this.meta[i]);
+            off += getByteSize(this.meta[i]);
         }
     }
 
-    public static int getLength(int meta){
+    public long[] getValue() {
+        long[] value = new long[this.getLength()];
+        int off = 0;
+        int index = 0;
+        for (byte byteMeta : this.meta) {
+            for (int m = 0; m < 4; m++) {
+                if (index >= this.getLength()) {
+                    return value;
+                }
+                int bitsMeta = getBitsMeta(byteMeta, m);
+                switch (bitsMeta) {
+                    case META_2_BYTE:
+                        value[index] = getShort(this.data, off);
+                        break;
+                    case META_4_BYTE:
+                        value[index] = getInt(this.data, off);
+                        break;
+                    case META_8_BYTE:
+                        value[index] = getLong(this.data, off);
+                        break;
+                    default:
+                        break;
+                }
+                off += getByteSize(bitsMeta);
+                index++;
+            }
+        }
+        return value;
+    }
+
+    public static int getByteSize(int meta){
         switch (meta){
             case META_0_BYTE:
                 return 0;
