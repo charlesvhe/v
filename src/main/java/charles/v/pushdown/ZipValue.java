@@ -8,7 +8,7 @@ public class ZipValue {
 
     /**
      * 2 bit as 1 meta info unit; 0b00->0 byte, 0b01->2 byte, 0b10->4 byte, 0b11->8 byte
-     * big endian: 0b0110 -> [0]->0b01->2 byte, [1]->ob10->4 byte
+     * big endian: 0b01101100 -> [0]->0b01->2 byte, [1]->0b10->4 byte, [2]->0b11->8 byte, [3]->0b00->0 byte
      */
     private byte[] valMeta;
     private byte[] valData;
@@ -26,37 +26,84 @@ public class ZipValue {
         int dataLength = 0;
         this.valMeta = new byte[(this.getLength() + 3) / 4];
         for (int i = 0; i < data.length; i++) {
-            int bitsMeta = this.getBitsMeta(data[i]);
-            this.valMeta[i / 4] = setBitsMeta(this.valMeta[i / 4], bitsMeta, (i % 4));
-            dataLength += getByteSize(bitsMeta);
+            this.setMeta(i, this.getValueMeta(data[i]));
+            dataLength += this.getDataSize(this.getValueMeta(data[i]));
         }
         return dataLength;
-    }
-
-    private int getBitsMeta(long value) {
-        if (0 == value) {
-            return META_0_BYTE;
-        } else if (Short.MIN_VALUE <= value && value <= Short.MAX_VALUE) {
-            return META_2_BYTE;
-        } else if (Integer.MIN_VALUE <= value && value <= Integer.MAX_VALUE) {
-            return META_4_BYTE;
-        } else {
-            return META_8_BYTE;
-        }
     }
 
     private void initValData(long[] data, int dataLength) {
         int off = 0;
         this.valData = new byte[dataLength];
         for (int i = 0; i < data.length; i++) {
-            int bitsMeta = getBitsMeta(this.valMeta[i / 4], (i % 4));
-            this.putValue(bitsMeta, off, data[i]);
-            off += getByteSize(bitsMeta);
+            int meta = getMeta(this.valMeta[i / 4], (i % 4));
+            this.putValue(meta, off, data[i]);
+            off += this.getDataSize(meta);
         }
     }
 
-    private void putValue(int bitsMeta, int off, long value) {
-        switch (bitsMeta) {
+    public long[] getValue() {
+        long[] value = new long[this.getLength()];
+        int off = 0;
+        int index = 0;
+        for (byte byteMeta : this.valMeta) {
+            for (int bitMetaIndex = 0; bitMetaIndex < 4; bitMetaIndex++) {
+                if (index >= this.getLength()) {
+                    return value;
+                }
+                int meta = getMeta(byteMeta, bitMetaIndex);
+                value[index] = getValue(meta, off);
+                off += this.getDataSize(meta);
+                index++;
+            }
+        }
+        return value;
+    }
+
+    public long getValue(int index) {
+        int[] metaAndDataOff = this.getMetaAndDataOff(index);
+        return this.getValue(metaAndDataOff[0], metaAndDataOff[1]);
+    }
+
+    private long getValue(int meta, int off) {
+        switch (meta) {
+            case META_0_BYTE:
+                return 0;
+            case META_2_BYTE:
+                return getShort(this.valData, off);
+            case META_4_BYTE:
+                return getInt(this.valData, off);
+            case META_8_BYTE:
+                return  getLong(this.valData, off);
+            default:
+                throw new IllegalArgumentException();
+        }
+    }
+
+    public void putValue(long[] data) {
+        this.length = data.length;
+        int dataLength = this.initValMeta(data);
+        this.initValData(data, dataLength);
+    }
+
+    public void putValue(long val, int index) {
+        int[] metaAndDataOff = this.getMetaAndDataOff(index);
+        int meta = getValueMeta(val);
+        if (meta != metaAndDataOff[0]) {
+            int dataSize = getDataSize(meta);
+            int origDataSize = getDataSize(metaAndDataOff[0]);
+            byte[] origData = this.valData;
+            this.valData = new byte[origData.length + dataSize - origDataSize];
+            this.setMeta(index, meta);
+            System.arraycopy(origData, 0, this.valData, 0, metaAndDataOff[1]);
+            System.arraycopy(origData, metaAndDataOff[1] + origDataSize,
+                    this.valData, metaAndDataOff[1] + dataSize, origData.length - (metaAndDataOff[1]+origDataSize));
+        }
+        this.putValue(meta,metaAndDataOff[1], val);
+    }
+
+    private void putValue(int meta, int off, long value) {
+        switch (meta) {
             case META_0_BYTE:
                 // do nothing
                 break;
@@ -74,83 +121,35 @@ public class ZipValue {
         }
     }
 
-    private int[] getBitsMetaAndOff(int index) {
-        int[] bitsMetaAndOff = new int[2];
+    public static int getValueMeta(long value) {
+        if (0 == value) {
+            return META_0_BYTE;
+        } else if (Short.MIN_VALUE <= value && value <= Short.MAX_VALUE) {
+            return META_2_BYTE;
+        } else if (Integer.MIN_VALUE <= value && value <= Integer.MAX_VALUE) {
+            return META_4_BYTE;
+        } else {
+            return META_8_BYTE;
+        }
+    }
+
+    private int[] getMetaAndDataOff(int index) {
+        int[] metaAndDataOff = new int[2];
         int curIndex = 0;
         for (byte byteMeta : this.valMeta) {
             for (int m = 0; m < 4; m++) {
-                bitsMetaAndOff[0] = getBitsMeta(byteMeta, m);
+                metaAndDataOff[0] = getMeta(byteMeta, m);
                 if (index == curIndex) {
-                    return bitsMetaAndOff;
+                    return metaAndDataOff;
                 }
-                bitsMetaAndOff[1] += getByteSize(bitsMetaAndOff[0]);
+                metaAndDataOff[1] += this.getDataSize(metaAndDataOff[0]);
                 curIndex++;
             }
         }
         throw new IllegalArgumentException();
     }
 
-    public void putValue(long[] data) {
-        this.length = data.length;
-        int dataLength = this.initValMeta(data);
-        this.initValData(data, dataLength);
-    }
-
-    public void putValue(long val, int index) {
-        int[] bitsMetaAndOff = this.getBitsMetaAndOff(index);
-
-    }
-
-    public long[] getValue() {
-        long[] value = new long[this.getLength()];
-        int off = 0;
-        int index = 0;
-        for (byte byteMeta : this.valMeta) {
-            for (int m = 0; m < 4; m++) {
-                if (index >= this.getLength()) {
-                    return value;
-                }
-                int bitsMeta = getBitsMeta(byteMeta, m);
-                switch (bitsMeta) {
-                    case META_0_BYTE:
-                        // do nothing
-                        break;
-                    case META_2_BYTE:
-                        value[index] = getShort(this.valData, off);
-                        break;
-                    case META_4_BYTE:
-                        value[index] = getInt(this.valData, off);
-                        break;
-                    case META_8_BYTE:
-                        value[index] = getLong(this.valData, off);
-                        break;
-                    default:
-                        throw new IllegalArgumentException();
-                }
-                off += getByteSize(bitsMeta);
-                index++;
-            }
-        }
-        return value;
-    }
-
-    public long getValue(int index) {
-        int[] bitsMetaAndOff = this.getBitsMetaAndOff(index);
-        switch (bitsMetaAndOff[0]) {
-            case META_0_BYTE:
-                return 0;
-            case META_2_BYTE:
-                return getShort(this.valData, bitsMetaAndOff[1]);
-            case META_4_BYTE:
-                return getInt(this.valData, bitsMetaAndOff[1]);
-            case META_8_BYTE:
-                return getLong(this.valData, bitsMetaAndOff[1]);
-            default:
-                throw new IllegalArgumentException();
-        }
-    }
-
-    public static int getByteSize(int meta) {
+    public static int getDataSize(int meta) {
         switch (meta) {
             case META_0_BYTE:
                 return 0;
@@ -172,18 +171,22 @@ public class ZipValue {
      * 243 0b11110011
      * 252 0b11111100
      */
-    public static byte setBitsMeta(byte byteMeta, int bitsMeta, int off) {
-        switch (off) {
+    private void setMeta(int index, int meta) {
+        int byteMetaIndex = index/4;
+        int bitMetaIndex = index % 4;
+        switch (bitMetaIndex) {
             case 0:
-                return (byte) ((byteMeta & 63) | ((bitsMeta & 3) << 6));
+                this.valMeta[byteMetaIndex] = (byte) ((this.valMeta[byteMetaIndex] & 63) | ((meta & 3) << 6));
+                break;
             case 1:
-                return (byte) ((byteMeta & 207) | ((bitsMeta & 3) << 4));
+                this.valMeta[byteMetaIndex] = (byte) ((this.valMeta[byteMetaIndex] & 207) | ((meta & 3) << 4));
+                break;
             case 2:
-                return (byte) ((byteMeta & 243) | ((bitsMeta & 3) << 2));
+                this.valMeta[byteMetaIndex] = (byte) ((this.valMeta[byteMetaIndex] & 243) | ((meta & 3) << 2));
+                break;
             case 3:
-                return (byte) ((byteMeta & 252) | (bitsMeta & 3));
-            default:
-                throw new IllegalArgumentException();
+                this.valMeta[byteMetaIndex] =  (byte) ((this.valMeta[byteMetaIndex] & 252) | (meta & 3));
+                break;
         }
     }
 
@@ -194,8 +197,8 @@ public class ZipValue {
      * 12  0b00001100
      * 3   0b00000011
      */
-    public static int getBitsMeta(byte byteMeta, int off) {
-        switch (off) {
+    public static int getMeta(byte byteMeta, int bitMetaIndex) {
+        switch (bitMetaIndex) {
             case 0:
                 return (byteMeta & 192) >>> 6;
             case 1:
