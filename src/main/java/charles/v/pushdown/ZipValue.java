@@ -26,8 +26,8 @@ public class ZipValue {
         int dataLength = 0;
         this.valMeta = new byte[(this.getLength() + 3) / 4];
         for (int i = 0; i < data.length; i++) {
-            this.setMeta(i, this.getValueMeta(data[i]));
-            dataLength += this.getDataSize(this.getValueMeta(data[i]));
+            this.setMeta(i, getValueMeta(data[i]));
+            dataLength += getDataSize(getValueMeta(data[i]));
         }
         return dataLength;
     }
@@ -38,7 +38,7 @@ public class ZipValue {
         for (int i = 0; i < data.length; i++) {
             int meta = getMeta(this.valMeta[i / 4], (i % 4));
             this.putValue(meta, off, data[i]);
-            off += this.getDataSize(meta);
+            off += getDataSize(meta);
         }
     }
 
@@ -53,7 +53,7 @@ public class ZipValue {
                 }
                 int meta = getMeta(byteMeta, bitMetaIndex);
                 value[index] = getValue(meta, off);
-                off += this.getDataSize(meta);
+                off += getDataSize(meta);
                 index++;
             }
         }
@@ -142,7 +142,7 @@ public class ZipValue {
                 if (index == curIndex) {
                     return metaAndDataOff;
                 }
-                metaAndDataOff[1] += this.getDataSize(metaAndDataOff[0]);
+                metaAndDataOff[1] += getDataSize(metaAndDataOff[0]);
                 curIndex++;
             }
         }

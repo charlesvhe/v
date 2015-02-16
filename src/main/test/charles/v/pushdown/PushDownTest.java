@@ -1,18 +1,38 @@
 package charles.v.pushdown;
 
-
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
-public class TestPushDown {
+public class PushDownTest {
+
+    @Before
+    public void setUp() {
+
+    }
+
+    @After
+    public void tearDown() {
+
+    }
+
     @Test
-    public void testPushDown() {
+    public void testDivision() {
+        assertEquals(0.5, PushDown.division(1, 2), 0.000001);
+
+        assertEquals(0, PushDown.division(1, 0), 0);
+        assertEquals(0, PushDown.division(0, 1), 0);
+        assertEquals(0, PushDown.division(0, 0), 0);
+    }
+
+    @Test
+    public void testPerformance() {
         PushDown pd = new PushDown();
         List<PushDown.ValueUnit> valList = new ArrayList<PushDown.ValueUnit>();
         long ttl = 0;
@@ -72,5 +92,26 @@ public class TestPushDown {
         assertEquals(25, valList.get(1).getValue());
         assertEquals(25, valList.get(2).getValue());
         assertThat(valList.get(3).getValue(), anyOf(equalTo(37L), equalTo(38L)));
+    }
+
+    @Test
+    public void testEvenPushDown() {
+        PushDown pd = new PushDown();
+        List<PushDown.ValueUnit> valList = new ArrayList<PushDown.ValueUnit>();
+        long ttl = 0;
+        long targetVal = 100;
+        valList.add(pd.new ValueUnit(0));   // 100/4 = 25
+        valList.add(pd.new ValueUnit(0));   // 100/4 = 25
+        valList.add(pd.new ValueUnit(0));   // 100/4 = 25
+        valList.add(pd.new ValueUnit(0));   // 100/4 = 25
+
+        pd.pushDown(targetVal, valList, ttl);
+
+        assertEquals(25, valList.get(0).getValue());
+        assertEquals(25, valList.get(1).getValue());
+        assertEquals(25, valList.get(2).getValue());
+        assertEquals(25, valList.get(3).getValue());
+
+        assertNotNull(valList.get(0).toString());
     }
 }

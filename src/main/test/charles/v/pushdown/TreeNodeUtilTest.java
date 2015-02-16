@@ -3,32 +3,41 @@ package charles.v.pushdown;
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.collections4.PredicateUtils;
 import org.apache.commons.collections4.functors.TruePredicate;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TestTree {
+public class TreeNodeUtilTest {
+    TreeNode.Value value = new TreeNode.Value() {
+        @Override
+        public void aggregate(TreeNode.Value that, boolean clone) {
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return false;
+        }
+
+        @Override
+        public TreeNode.Value clone() {
+            return this;
+        }
+    };
+
+    @Before
+    public void setUp() {
+    }
+
+    @After
+    public void tearDown() {
+    }
+
     @Test
-    public void testTree() {
-        TreeNode.Value value = new TreeNode.Value() {
-            @Override
-            public void aggregate(TreeNode.Value that, boolean clone) {
-
-            }
-
-            @Override
-            public boolean isEmpty() {
-                return false;
-            }
-
-            @Override
-            public TreeNode.Value clone(){
-                return this;
-            }
-        };
-        
+    public void testPredicate() {
         TreeNode<String, TreeNode.Value> root = new TreeNode<String, TreeNode.Value>(null, null);
         for (int lA = 0; lA < 3; lA++) {
             String idlA = "LA" + lA;
@@ -43,7 +52,7 @@ public class TestTree {
                 for (int lC = 0; lC < 3; lC++) {
                     String idlC = "LC" + lC;
                     TreeNode<String, TreeNode.Value> lCNode = new TreeNode<String, TreeNode.Value>(idlC, lBNode);
-                    lCNode.value = value;
+                    lCNode.value = this.value;
                     lBNode.childNodes.put(idlC, lCNode);
                 }
             }
