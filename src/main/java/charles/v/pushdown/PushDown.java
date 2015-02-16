@@ -45,21 +45,21 @@ public class PushDown {
         long actualVal = 0;
         // distribute by ratio
         TreeMap<Long, List<ValueUnit>> errorMap = new TreeMap<Long, List<ValueUnit>>();
-        for (ValueUnit valUnit : valList) {
+        for (ValueUnit vn : valList) {
             long error = 0;
             if (0 == ttlVal) {
-                error = valUnit.setValue(even);
+                error = vn.setValue(even);
             } else {
-                error = valUnit.setValue(targetVal * PushDown.division(valUnit.getValue(), ttlVal));
+                error = vn.setValue(targetVal * PushDown.division(vn.getValue(), ttlVal));
             }
-            actualVal += valUnit.getValue();
+            actualVal += vn.getValue();
 
             List<ValueUnit> errorList = errorMap.get(error);
             if(null == errorList){
                 errorList = new ArrayList<ValueUnit>();
                 errorMap.put(error, errorList);
             }
-            errorList.add(valUnit);
+            errorList.add(vn);
         }
         // adjust error
         if (actualVal != targetVal) {
