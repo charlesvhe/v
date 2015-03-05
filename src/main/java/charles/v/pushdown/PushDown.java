@@ -46,7 +46,7 @@ public class PushDown {
         // distribute by ratio
         TreeMap<Long, List<ValueUnit>> errorMap = new TreeMap<Long, List<ValueUnit>>();
         for (ValueUnit vn : valList) {
-            long error = 0;
+            long error;
             if (0 == ttlVal) {
                 error = vn.setValue(even);
             } else {
@@ -66,7 +66,7 @@ public class PushDown {
             long error = targetVal - actualVal;
             int diff = error > 0 ? 1 : -1;
             while (0 != error){
-                List<ValueUnit> errorList = null;
+                List<ValueUnit> errorList;
                 if(diff > 0){
                     errorList = errorMap.pollFirstEntry().getValue();
                 }else{
